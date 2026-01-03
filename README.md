@@ -1,0 +1,1 @@
+# projeto_lakehouse_serverless_delta_aws
