@@ -1,0 +1,138 @@
+{
+  "Comment": "Orquestração de Glue Jobs em Step Functions",
+  "StartAt": "RawToStaged",
+  "States": {
+    "RawToStaged": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "RawToStagedTags",
+          "States": {
+            "RawToStagedTags": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "datahandson-mds-raw-staged-deltalake",
+                "Arguments": {
+                  "--input_path.$": "States.Format('s3://{}/movielens_rds_dms_serverless_dev/public/tags/', $.raw_bucket)",
+                  "--delta_table_path.$": "States.Format('s3://{}/movielens_delta_glue/tags/', $.staged_bucket)",
+                  "--primary_key": "userid,movieid"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "RawToStagedMovies",
+          "States": {
+            "RawToStagedMovies": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "datahandson-mds-raw-staged-deltalake",
+                "Arguments": {
+                  "--input_path.$": "States.Format('s3://{}/movielens_rds_dms_serverless_dev/public/movies/', $.raw_bucket)",
+                  "--delta_table_path.$": "States.Format('s3://{}/movielens_delta_glue/movies/', $.staged_bucket)",
+                  "--primary_key": "movieid"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "RawToStagedLinks",
+          "States": {
+            "RawToStagedLinks": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "datahandson-mds-raw-staged-deltalake",
+                "Arguments": {
+                  "--input_path.$": "States.Format('s3://{}/movielens_rds_dms_serverless_dev/public/links/', $.raw_bucket)",
+                  "--delta_table_path.$": "States.Format('s3://{}/movielens_delta_glue/links/', $.staged_bucket)",
+                  "--primary_key": "movieid"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "RawToStagedRatings",
+          "States": {
+            "RawToStagedRatings": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "datahandson-mds-raw-staged-deltalake",
+                "Arguments": {
+                  "--input_path.$": "States.Format('s3://{}/movielens_rds_dms_serverless_dev/public/ratings/', $.raw_bucket)",
+                  "--delta_table_path.$": "States.Format('s3://{}/movielens_delta_glue/ratings/', $.staged_bucket)",
+                  "--primary_key": "userid,movieid"
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "StagedToCurated",
+      "ResultPath": null
+    },
+    "StagedToCurated": {
+      "Type": "Parallel",
+      "Branches": [
+        {
+          "StartAt": "StagedToCuratedUserTags",
+          "States": {
+            "StagedToCuratedUserTags": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "datahandson-mds-staged-curated-deltalake-user-tags",
+                "Arguments": {
+                  "--staged_bucket.$": "$.staged_bucket",
+                  "--curated_bucket.$": "$.curated_bucket"
+                }
+              },
+              "End": true
+            }
+          }
+        },
+        {
+          "StartAt": "StagedToCuratedMovieRating",
+          "States": {
+            "StagedToCuratedMovieRating": {
+              "Type": "Task",
+              "Resource": "arn:aws:states:::glue:startJobRun.sync",
+              "Parameters": {
+                "JobName": "datahandson-mds-staged-curated-deltalake-movie-ratings",
+                "Arguments": {
+                  "--staged_bucket.$": "$.staged_bucket",
+                  "--curated_bucket.$": "$.curated_bucket"
+                }
+              },
+              "End": true
+            }
+          }
+        }
+      ],
+      "Next": "CuratedDataQuality",
+      "ResultPath": null
+    },
+    "CuratedDataQuality": {
+      "Type": "Task",
+      "Resource": "arn:aws:states:::glue:startJobRun.sync",
+      "Parameters": {
+        "JobName": "datahandson-mds-deltalake-data-quality",
+        "Arguments": {
+          "--curated_bucket.$": "$.curated_bucket",
+          "--datadocs_bucket.$": "$.datadocs_bucket"
+        }
+      },
+      "End": true
+    }
+  }
+}

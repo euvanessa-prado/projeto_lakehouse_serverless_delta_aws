@@ -1,0 +1,20 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: postgres123
+      POSTGRES_DB: data_hands_on_postgres_local
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  adminer:
+    image: adminer
+    ports:
+      - 8080:8080
+
+volumes:
+  postgres_data:

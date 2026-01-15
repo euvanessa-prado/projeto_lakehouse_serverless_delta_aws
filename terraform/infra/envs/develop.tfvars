@@ -1,0 +1,7 @@
+environment = "dev"
+region = "us-east-1"
+s3_bucket_raw = "cjmm-datalake-mds-raw-759262712909"
+s3_bucket_staged = "cjmm-datalake-mds-staged-759262712909"
+s3_bucket_scripts = "cjmm-datalake-mds-configs-dev"
+s3_bucket_curated = "cjmm-datalake-mds-curated-759262712909"
+s3_bucket_datadocs = "cjmm-datadocs-greatexpectations-759262712909"
